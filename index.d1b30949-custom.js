@@ -24578,12 +24578,13 @@ class nm {
 	const rect = e.target.getBoundingClientRect();
 	const tnatom = e.target.closest('.tn-atom');
 	const parentZoom = tnatom.parentElement.style.zoom;
+	console.log("parentZoom:", parentZoom)
 	let x1 = e.clientX - rect.left * parentZoom;
 	let y1 = e.clientY - rect.top * parentZoom;
 
     // const t = this.isVisible ? e.pageY - j.layoutController.top : e.clientY;
 
-    Se.dispatch("pointer.raw", { x: x1, y: y1 });
+    Se.dispatch("pointer.raw", { x: 0, y: 0 });
   };
   #t = () => {
     Se.dispatch("pointer.raw.down");
