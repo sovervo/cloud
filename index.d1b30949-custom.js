@@ -24582,9 +24582,11 @@ class nm {
 	let x1 = e.clientX - rect.left * parentZoom;
 	let y1 = e.clientY - rect.top * parentZoom;
 
+	console.log("x1:", x1, "y1:", y1, "e.clientX:", e.clientX, "e.clientY:", e.clientY)
+
     // const t = this.isVisible ? e.pageY - j.layoutController.top : e.clientY;
 
-    Se.dispatch("pointer.raw", { x: 0, y: 0 });
+    Se.dispatch("pointer.raw", { x: x1, y: y1 });
   };
   #t = () => {
     Se.dispatch("pointer.raw.down");
