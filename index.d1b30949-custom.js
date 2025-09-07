@@ -24575,9 +24575,15 @@ class nm {
       requestAnimationFrame(this.#i));
   };
   #e = (e) => {
-	console.log("e:", e)
-    const t = this.isVisible ? e.pageY - j.layoutController.top : e.clientY;
-    Se.dispatch("pointer.raw", { x: e.pageX, y: t });
+	const rect = e.target.getBoundingClientRect();
+	const tnatom = e.target.closest('.tn-atom');
+	const parentZoom = tnatom.parentElement.style.zoom;
+	let x1 = e.clientX - rect.left * parentZoom;
+	let y1 = e.clientY - rect.top * parentZoom;
+
+    // const t = this.isVisible ? e.pageY - j.layoutController.top : e.clientY;
+
+    Se.dispatch("pointer.raw", { x: x1, y: y1 });
   };
   #t = () => {
     Se.dispatch("pointer.raw.down");
