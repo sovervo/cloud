@@ -24035,22 +24035,7 @@ class Ar {
       this.camera.updateProjectionMatrix(),
       this.updateNDC11(),
       (this.collection = []));
-    const e = document.getElementsByClassName("webgl-elements_container");
-    for (let t of e) {
-      const n = t.getElementsByTagName("img");
-      if (n.length === 0) {
-        console.warn("Empty container?", t);
-        continue;
-      }
-      for (let r = 0; r < n.length; r++) {
-        const s = n[r],
-          a = new Lt(new Zt(), new ca({ transparent: !0 }));
-        (this.updateMesh(a, s),
-          this.collection.push({ mesh: a, container: t, img: s }),
-          this.scene.add(a));
-      }
-      ((t.style.opacity = 0), (t.style.pointerEvents = "none"));
-    }
+    // Defer collecting elements; will populate in setContainer
     ((this.rt = new qt(j.viewport.x, j.viewport.y, {
       wrapS: Wt,
       wrapT: Wt,
@@ -24066,12 +24051,32 @@ class Ar {
       document.addEventListener("scroll", this.onScroll));
   }
   setContainer = (e) => {
-    ((this.container = e),
+    (this.container = e,
       this.onScroll(),
-      this.updateNDC11(),
-      this.collection.forEach(({ mesh: t, img: n }) => {
-        this.updateMesh(t, n, !1);
-      }));
+      this.updateNDC11());
+
+    // remove previous meshes
+    this.collection.forEach(({ mesh: t }) => {
+      this.scene.remove(t);
+      if (t.geometry && t.geometry.dispose) t.geometry.dispose();
+      if (t.material && t.material.map && t.material.map.dispose)
+        t.material.map.dispose();
+    });
+    this.collection.length = 0;
+
+    // add images within this container only
+    const els = e.getElementsByClassName("webgl-elements_container");
+    for (let t of els) {
+      const n = t.getElementsByTagName("img");
+      for (let r = 0; r < n.length; r++) {
+        const s = n[r],
+          a = new Lt(new Zt(), new ca({ transparent: !0 }));
+        this.updateMesh(a, s);
+        this.collection.push({ mesh: a, container: t, img: s });
+        this.scene.add(a);
+      }
+      (t.style.opacity = 0), (t.style.pointerEvents = "none");
+    }
   };
   updateNDC11 = () => {
     (this.ndc11
@@ -24559,11 +24564,12 @@ class nm {
       ...document.getElementsByClassName("webgl-canvas_container"),
     ]),
       (this.observer = new IntersectionObserver((e) => {
-        let t = 0;
-        (e.forEach((n) => {
-          n.isIntersecting && (t++, j.instance.setContainer(n.target));
-        }),
-          (this.isVisible = t > 0));
+        let visible = e.filter((n) => n.isIntersecting);
+        if (visible.length > 0) {
+          visible.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          j.instance.setContainer(visible[0].target);
+        }
+        this.isVisible = visible.length > 0;
       })),
       this.containers.forEach((e) => {
         this.observer.observe(e);
@@ -24575,14 +24581,26 @@ class nm {
       requestAnimationFrame(this.#i));
   };
   #e = (e) => {
-	let parentZoom = 1;
-	const rect = e.target.getBoundingClientRect();
-	const tnatom = e.target.closest('.tn-atom');
-	if(tnatom){
-		parentZoom = parseFloat(tnatom.parentElement.style.zoom);
-	}
-	let x1 = (e.clientX - rect.left) / parentZoom;
-	let y1 = (e.clientY - rect.top) / parentZoom;
+    let parentZoom = 1;
+    // Prefer the container under the pointer, if any
+    let active = null;
+    for (let c of this.containers) {
+      const r = c.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+        active = c;
+        break;
+      }
+    }
+    const container = active || j.container || (this.containers && this.containers[0]);
+    if (!container) return;
+    if (container !== j.container) j.instance.setContainer(container);
+    const rect = container.getBoundingClientRect();
+    const tnatom = container.closest('.tn-atom');
+    if (tnatom && tnatom.parentElement && tnatom.parentElement.style && tnatom.parentElement.style.zoom) {
+      parentZoom = parseFloat(tnatom.parentElement.style.zoom);
+    }
+    let x1 = (e.clientX - rect.left) / parentZoom;
+    let y1 = (e.clientY - rect.top) / parentZoom;
 
     Se.dispatch("pointer.raw", { x: x1, y: y1 });
   };
