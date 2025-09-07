@@ -24036,9 +24036,8 @@ class Ar {
       this.updateNDC11(),
       (this.collection = []));
     const e = document.getElementsByClassName("webgl-elements_container");
-	const t396 = e.closest('.t396');
     for (let t of e) {
-      const n = t396.querySelectorAll(".t-bgimg");
+      const n = t.getElementsByTagName("img");
       if (n.length === 0) {
         console.warn("Empty container?", t);
         continue;
@@ -24046,20 +24045,9 @@ class Ar {
       for (let r = 0; r < n.length; r++) {
         const s = n[r],
           a = new Lt(new Zt(), new ca({ transparent: !0 }));
-		
-		const imageUrl = s.getAttribute("data-original");
-
-        if (imageUrl) {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.onload = () => {
-			(this.updateMesh(a, s),
-			this.collection.push({ mesh: a, container: t, img: s }),
-			this.scene.add(a));            
-          };
-          img.src = imageUrl;
-        }
-
+        (this.updateMesh(a, s),
+          this.collection.push({ mesh: a, container: t, img: s }),
+          this.scene.add(a));
       }
       ((t.style.opacity = 0), (t.style.pointerEvents = "none"));
     }
@@ -24578,7 +24566,6 @@ class nm {
           (this.isVisible = t > 0));
       })),
       this.containers.forEach((e) => {
-		console.log("e:", e)
         this.observer.observe(e);
       }),
       j.instance.create(this.containers[0]),
