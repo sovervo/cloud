@@ -22039,12 +22039,11 @@ class Pp extends Kt {
           window.addEventListener("mouseup", S));
       },
       x = (T) => {
+		// scale mouse position
+		console.log("T1:", T)
         if (a) {
           const E = T.clientX - o,
             A = T.clientY - l;
-
-			// scale mouse position
-			console.log("T:", T)
 			
           Math.abs(A) > p
             ? (T.preventDefault(),
