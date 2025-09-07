@@ -24052,6 +24052,7 @@ class Ar {
   }
   setContainer = (e) => {
     (this.container = e,
+      this.scope = e && e.closest ? e.closest('.preloader') || e : e,
       this.onScroll(),
       this.updateNDC11());
 
@@ -24064,8 +24065,9 @@ class Ar {
     });
     this.collection.length = 0;
 
-    // add images within this container only
-    const els = e.getElementsByClassName("webgl-elements_container");
+    // add images within the nearest preloader scope (or container if none)
+    const root = this.scope || e;
+    const els = root.getElementsByClassName("webgl-elements_container");
     for (let t of els) {
       const n = t.getElementsByTagName("img");
       for (let r = 0; r < n.length; r++) {
@@ -24154,9 +24156,8 @@ class Ar {
       this.rt.setSize(e, t));
   };
   onScroll = () => {
-    this.top = this.container
-      ? this.container.getBoundingClientRect().top + window.scrollY
-      : 0;
+    const el = this.scope || this.container;
+    this.top = el ? el.getBoundingClientRect().top + window.scrollY : 0;
   };
 }
 var Zp = `#define pi 3.141592653589793
@@ -24589,18 +24590,8 @@ class nm {
   };
   #e = (e) => {
     let parentZoom = 1;
-    // Prefer the container under the pointer, if any
-    let active = null;
-    for (let c of this.containers) {
-      const r = c.getBoundingClientRect();
-      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
-        active = c;
-        break;
-      }
-    }
-    const container = active || j.container || (this.containers && this.containers[0]);
+    const container = j.container || (this.containers && this.containers[0]);
     if (!container) return;
-    if (container !== j.container) j.instance.setContainer(container);
     const rect = container.getBoundingClientRect();
     const tnatom = container.closest('.tn-atom');
     if (tnatom && tnatom.parentElement && tnatom.parentElement.style && tnatom.parentElement.style.zoom) {
@@ -24619,10 +24610,8 @@ class nm {
   };
   #i = (e) => {
     (requestAnimationFrame(this.#i),
-      this.isVisible
-        ? (document.hasFocus() || Se.dispatch("Performance.flushEvent"),
-          Se.dispatch("frame.raw", e))
-        : Se.dispatch("Performance.flushEvent"));
+      (this.isVisible && document.hasFocus()) || Se.dispatch("Performance.flushEvent"),
+      Se.dispatch("frame.raw", e));
   };
 }
 const im = new nm();
