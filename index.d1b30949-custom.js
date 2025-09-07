@@ -24575,6 +24575,7 @@ class nm {
       requestAnimationFrame(this.#i));
   };
   #e = (e) => {
+	console.log("e:", e)
     const t = this.isVisible ? e.pageY - j.layoutController.top : e.clientY;
     Se.dispatch("pointer.raw", { x: e.pageX, y: t });
   };
