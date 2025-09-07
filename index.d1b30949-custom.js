@@ -24556,6 +24556,7 @@ class j {
 }
 class nm {
   isVisible = !1;
+  mirrors = [];
   constructor() {
     new j();
   }
@@ -24568,6 +24569,19 @@ class nm {
       document.body.addEventListener("mousedown", this.#t),
       document.body.addEventListener("mouseup", this.#n),
       requestAnimationFrame(this.#i));
+
+    // create mirror canvases for all additional containers
+    for (let i = 1; i < this.containers.length; i++) {
+      const el = this.containers[i];
+      const canvas = document.createElement("canvas");
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.display = "block";
+      el.appendChild(canvas);
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = !1;
+      this.mirrors.push({ container: el, canvas, ctx });
+    }
   };
   #e = (e) => {
     let parentZoom = 1;
@@ -24592,6 +24606,25 @@ class nm {
   #i = (e) => {
     (requestAnimationFrame(this.#i),
       Se.dispatch("frame.raw", e));
+
+    // copy the main renderer's canvas into all mirror canvases
+    if (this.mirrors.length) {
+      const src = j.pipeline && j.pipeline.renderer && j.pipeline.renderer.domElement;
+      if (src) {
+        const dpr = window.devicePixelRatio || 1;
+        for (let m of this.mirrors) {
+          const r = m.container.getBoundingClientRect();
+          const w = Math.max(1, Math.round(r.width * dpr));
+          const h = Math.max(1, Math.round(r.height * dpr));
+          if (m.canvas.width !== w || m.canvas.height !== h) {
+            m.canvas.width = w;
+            m.canvas.height = h;
+          }
+          m.ctx.clearRect(0, 0, m.canvas.width, m.canvas.height);
+          m.ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, m.canvas.width, m.canvas.height);
+        }
+      }
+    }
   };
 }
 const im = new nm();
