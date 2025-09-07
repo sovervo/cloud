@@ -24468,7 +24468,8 @@ class ci {
   update = ({ seconds: e }) => {
     (ot(
       "SimpleFluidSim.useDrops",
-      e - this.lastPointerMovementTime > this.delayBeforeDropsAllowed,
+      at("SimpleFluidSim.dropsEnabled", !0).value &&
+        (e - this.lastPointerMovementTime > this.delayBeforeDropsAllowed),
     ),
       (this.program.material.uniforms.map.value = this.fbo.read.texture),
       ai(this.program, this.fbo),
@@ -24549,6 +24550,15 @@ class j {
       j.viewport.setContainer(e),
       j.pipeline.setContainer(e),
       j.layoutController.setContainer(e));
+
+    // Read data-rain-drops attribute to control random drops
+    const dropsAttr = e.getAttribute("data-rain-drops");
+    let dropsEnabled = !0;
+    if (dropsAttr !== null) {
+      const v = String(dropsAttr).trim().toLowerCase();
+      dropsEnabled = !(v === "0" || v === "false" || v === "off" || v === "no" || v === "none");
+    }
+    ot("SimpleFluidSim.dropsEnabled", dropsEnabled);
   };
 }
 class nm {
@@ -24579,10 +24589,10 @@ class nm {
   #e = (e) => {
 	let parentZoom = 1;
 	const rect = e.target.getBoundingClientRect();
-	// const tnatom = e.target.closest('.tn-atom');
-	// if(tnatom){
-	// 	parentZoom = parseFloat(tnatom.parentElement.style.zoom);
-	// }
+	const tnatom = e.target.closest('.tn-atom');
+	if(tnatom){
+		parentZoom = parseFloat(tnatom.parentElement.style.zoom);
+	}
 	let x1 = (e.clientX - rect.left) / parentZoom;
 	let y1 = (e.clientY - rect.top) / parentZoom;
 
