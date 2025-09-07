@@ -24579,8 +24579,8 @@ class nm {
 	const tnatom = e.target.closest('.tn-atom');
 	const parentZoom = parseFloat(tnatom.parentElement.style.zoom);
 	console.log("parentZoom:", parentZoom)
-	let x1 = (e.clientX - rect.left) * parentZoom;
-	let y1 = (e.clientY - rect.top) * parentZoom;
+	let x1 = (e.clientX - rect.left) / parentZoom;
+	let y1 = (e.clientY - rect.top) / parentZoom;
 
 	console.log("x1:", x1, "y1:", y1, "e.clientX:", e.clientX, "e.clientY:", e.clientY)
 
