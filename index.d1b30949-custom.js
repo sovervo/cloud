@@ -24563,25 +24563,6 @@ class nm {
     ((this.containers = [
       ...document.getElementsByClassName("webgl-canvas_container"),
     ]),
-      (this.visibleMap = new Map()),
-      (this.observer = new IntersectionObserver((e) => {
-        e.forEach((n) => {
-          if (n.isIntersecting) this.visibleMap.set(n.target, n.intersectionRatio);
-          else this.visibleMap.delete(n.target);
-        });
-        if (this.visibleMap.size > 0) {
-          let best = null;
-          let bestRatio = -1;
-          this.visibleMap.forEach((r, el) => {
-            if (r > bestRatio) { bestRatio = r; best = el; }
-          });
-          if (best && best !== j.container) j.instance.setContainer(best);
-        }
-        this.isVisible = this.visibleMap.size > 0;
-      }, { threshold: [0, 0.01, 0.1, 0.25, 0.5, 0.75, 1] })),
-      this.containers.forEach((e) => {
-        this.observer.observe(e);
-      }),
       j.instance.create(this.containers[0]),
       document.body.addEventListener("mousemove", this.#e),
       document.body.addEventListener("mousedown", this.#t),
@@ -24610,7 +24591,6 @@ class nm {
   };
   #i = (e) => {
     (requestAnimationFrame(this.#i),
-      (this.isVisible && document.hasFocus()) || Se.dispatch("Performance.flushEvent"),
       Se.dispatch("frame.raw", e));
   };
 }
