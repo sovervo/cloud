@@ -24497,7 +24497,7 @@ class j {
     return j.#e !== null ? j.#e : new j();
   }
   constructor({ settings: e } = {}) {
-    if (j.#e !== null) throw "Root already exists";
+    if (j.#e !== null) return j.#e;
     ((j.#e = this),
       (j.settings = Object.assign(j.settings, e)),
       (j.features = new Tr()),
@@ -24521,11 +24521,11 @@ class j {
       new Qp(),
       j.settings.devMode && (window.root = j));
   };
-  containters = [];
+  static containters = [];
   setContainer = (e) => {
     if (j.container === e) return;
     at("gradientMap", null).value !== null && at("gradientMap").value.dispose();
-    const t = this.containters.filter((r) => r.container === e);
+    const t = j.containters.filter((r) => r.container === e);
     if (t.length == 0) {
       let r = null;
       const s = e.getElementsByTagName("img");
@@ -24539,7 +24539,7 @@ class j {
         });
       }
       const a = { container: e, gradMap: r };
-      (this.containters.push(a), t.push(a));
+      (j.containters.push(a), t.push(a));
     }
     const n = t[0];
     (ot("gradientMap", n.gradMap),
@@ -24551,38 +24551,84 @@ class j {
 }
 class nm {
   isVisible = !1;
-  constructor() {
-    new j();
+  static instances = [];
+  static globalRaf = null;
+  
+  constructor(containerSelector, autoStart = false) {
+    this.containerSelector = containerSelector;
+    nm.instances.push(this);
+    
+    if (!nm.globalRaf) {
+      // Only one global animation frame for all instances
+      nm.globalRaf = () => {
+        requestAnimationFrame(nm.globalRaf);
+        let anyVisible = nm.instances.some(instance => instance.isVisible);
+        if (anyVisible) {
+          (document.hasFocus() || Se.dispatch("Performance.flushEvent"),
+            Se.dispatch("frame.raw", performance.now()));
+        } else {
+          Se.dispatch("Performance.flushEvent");
+        }
+      };
+      requestAnimationFrame(nm.globalRaf);
+    }
+    
+    if (autoStart) {
+      this.start();
+    }
   }
+  
   start = () => {
-    ((this.containers = [
-      ...document.getElementsByClassName("webgl-canvas_container"),
-    ]),
-      (this.observer = new IntersectionObserver((e) => {
-        let t = 0;
-        (e.forEach((n) => {
-          n.isIntersecting && (t++, j.instance.setContainer(n.target));
-        }),
-          (this.isVisible = t > 0));
-      })),
-      this.containers.forEach((e) => {
-        this.observer.observe(e);
-      }),
-      j.instance.create(this.containers[0]),
-      document.body.addEventListener("mousemove", this.#e),
-      document.body.addEventListener("mousedown", this.#t),
-      document.body.addEventListener("mouseup", this.#n),
-      requestAnimationFrame(this.#i));
+    const containers = this.containerSelector 
+      ? document.querySelectorAll(this.containerSelector)
+      : document.getElementsByClassName("webgl-canvas_container");
+    
+    this.containers = [...containers];
+    
+    if (this.containers.length === 0) {
+      console.warn("No water ripple containers found for selector:", this.containerSelector);
+      return;
+    }
+
+    // Initialize the j singleton if not already done
+    if (!j.instance.layoutController) {
+      j.instance.create(this.containers[0]);
+    }
+
+    this.observer = new IntersectionObserver((e) => {
+      let visibleCount = 0;
+      e.forEach((entry) => {
+        if (entry.isIntersecting) {
+          visibleCount++;
+          j.instance.setContainer(entry.target);
+        }
+      });
+      this.isVisible = visibleCount > 0;
+    });
+    
+    this.containers.forEach((container) => {
+      console.log("container:", container);
+      this.observer.observe(container);
+      
+      // Add event listeners to each container
+      container.addEventListener("mousemove", this.#e);
+      container.addEventListener("mousedown", this.#t);
+      container.addEventListener("mouseup", this.#n);
+    });
+    
+    return this;
   };
   #e = (e) => {
-	let parentZoom = 1;
-	const rect = e.target.getBoundingClientRect();
-	const tnatom = e.target.closest('.tn-atom');
-	if(tnatom){
-		parentZoom = parseFloat(tnatom.parentElement.style.zoom);
-	}
-	let x1 = (e.clientX - rect.left) / parentZoom;
-	let y1 = (e.clientY - rect.top) / parentZoom;
+    // Get the container that this event is for
+    const container = e.currentTarget;
+    let parentZoom = 1;
+    const rect = container.getBoundingClientRect();
+    const tnatom = container.closest('.tn-atom');
+    if(tnatom){
+      parentZoom = parseFloat(tnatom.parentElement.style.zoom);
+    }
+    let x1 = (e.clientX - rect.left) / parentZoom;
+    let y1 = (e.clientY - rect.top) / parentZoom;
 
     Se.dispatch("pointer.raw", { x: x1, y: y1 });
   };
@@ -24592,13 +24638,13 @@ class nm {
   #n = () => {
     Se.dispatch("pointer.raw.up");
   };
-  #i = (e) => {
-    (requestAnimationFrame(this.#i),
-      this.isVisible
-        ? (document.hasFocus() || Se.dispatch("Performance.flushEvent"),
-          Se.dispatch("frame.raw", e))
-        : Se.dispatch("Performance.flushEvent"));
-  };
 }
-const im = new nm();
-im.start();
+
+// Function to initialize water ripple effect on containers
+function initWaterRipple(containerSelector = ".webgl-canvas_container") {
+  const instance = new nm(containerSelector, true);
+  return instance;
+}
+
+// Initialize default water ripple for backward compatibility
+const im = initWaterRipple();
