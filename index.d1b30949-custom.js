@@ -23922,8 +23922,9 @@ class _r {
     format: ft,
     colorSpace: Xt,
   };
-  constructor() {
-    ((this.renderer = new dp({
+  constructor(e) {
+    ((this.scene = e || j.scene),
+      (this.renderer = new dp({
       antialias: !1,
       powerPreference: "high-performance",
       premultipliedAlpha: !1,
@@ -23951,7 +23952,8 @@ class _r {
     (e.appendChild(this.renderer.domElement), this.onResize(j.viewport));
   };
   render = () => {
-    const { scene: e, camera: t } = j,
+    const e = this.scene,
+      t = j.camera,
       n = this.renderer.autoClear;
     ((this.renderer.autoClear = !0),
       this.renderer.setRenderTarget(this.sceneRT),
@@ -24577,10 +24579,10 @@ class nm {
   #e = (e) => {
 	let parentZoom = 1;
 	const rect = e.target.getBoundingClientRect();
-	const tnatom = e.target.closest('.tn-atom');
-	if(tnatom){
-		parentZoom = parseFloat(tnatom.parentElement.style.zoom);
-	}
+	// const tnatom = e.target.closest('.tn-atom');
+	// if(tnatom){
+	// 	parentZoom = parseFloat(tnatom.parentElement.style.zoom);
+	// }
 	let x1 = (e.clientX - rect.left) / parentZoom;
 	let y1 = (e.clientY - rect.top) / parentZoom;
 
