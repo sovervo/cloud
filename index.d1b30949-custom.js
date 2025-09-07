@@ -24036,8 +24036,9 @@ class Ar {
       this.updateNDC11(),
       (this.collection = []));
     const e = document.getElementsByClassName("webgl-elements_container");
+	const t396 = e.closest('.t396');
     for (let t of e) {
-      const n = t.getElementsByTagName("img");
+      const n = t396.querySelectorAll(".t-bgimg");
       if (n.length === 0) {
         console.warn("Empty container?", t);
         continue;
@@ -24045,9 +24046,20 @@ class Ar {
       for (let r = 0; r < n.length; r++) {
         const s = n[r],
           a = new Lt(new Zt(), new ca({ transparent: !0 }));
-        (this.updateMesh(a, s),
-          this.collection.push({ mesh: a, container: t, img: s }),
-          this.scene.add(a));
+		
+		const imageUrl = s.getAttribute("data-original");
+
+        if (imageUrl) {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+			(this.updateMesh(a, s),
+			this.collection.push({ mesh: a, container: t, img: s }),
+			this.scene.add(a));            
+          };
+          img.src = imageUrl;
+        }
+
       }
       ((t.style.opacity = 0), (t.style.pointerEvents = "none"));
     }
@@ -24497,7 +24509,7 @@ class j {
     return j.#e !== null ? j.#e : new j();
   }
   constructor({ settings: e } = {}) {
-    if (j.#e !== null) return j.#e;
+    if (j.#e !== null) throw "Root already exists";
     ((j.#e = this),
       (j.settings = Object.assign(j.settings, e)),
       (j.features = new Tr()),
@@ -24521,11 +24533,11 @@ class j {
       new Qp(),
       j.settings.devMode && (window.root = j));
   };
-  static containters = [];
+  containters = [];
   setContainer = (e) => {
     if (j.container === e) return;
     at("gradientMap", null).value !== null && at("gradientMap").value.dispose();
-    const t = j.containters.filter((r) => r.container === e);
+    const t = this.containters.filter((r) => r.container === e);
     if (t.length == 0) {
       let r = null;
       const s = e.getElementsByTagName("img");
@@ -24539,7 +24551,7 @@ class j {
         });
       }
       const a = { container: e, gradMap: r };
-      (j.containters.push(a), t.push(a));
+      (this.containters.push(a), t.push(a));
     }
     const n = t[0];
     (ot("gradientMap", n.gradMap),
@@ -24551,84 +24563,39 @@ class j {
 }
 class nm {
   isVisible = !1;
-  static instances = [];
-  static globalRaf = null;
-  
-  constructor(containerSelector, autoStart = false) {
-    this.containerSelector = containerSelector;
-    nm.instances.push(this);
-    
-    if (!nm.globalRaf) {
-      // Only one global animation frame for all instances
-      nm.globalRaf = () => {
-        requestAnimationFrame(nm.globalRaf);
-        let anyVisible = nm.instances.some(instance => instance.isVisible);
-        if (anyVisible) {
-          (document.hasFocus() || Se.dispatch("Performance.flushEvent"),
-            Se.dispatch("frame.raw", performance.now()));
-        } else {
-          Se.dispatch("Performance.flushEvent");
-        }
-      };
-      requestAnimationFrame(nm.globalRaf);
-    }
-    
-    if (autoStart) {
-      this.start();
-    }
+  constructor() {
+    new j();
   }
-  
   start = () => {
-    const containers = this.containerSelector 
-      ? document.querySelectorAll(this.containerSelector)
-      : document.getElementsByClassName("webgl-canvas_container");
-    
-    this.containers = [...containers];
-    
-    if (this.containers.length === 0) {
-      console.warn("No water ripple containers found for selector:", this.containerSelector);
-      return;
-    }
-
-    // Initialize the j singleton if not already done
-    if (!j.instance.layoutController) {
-      j.instance.create(this.containers[0]);
-    }
-
-    this.observer = new IntersectionObserver((e) => {
-      let visibleCount = 0;
-      e.forEach((entry) => {
-        if (entry.isIntersecting) {
-          visibleCount++;
-          j.instance.setContainer(entry.target);
-        }
-      });
-      this.isVisible = visibleCount > 0;
-    });
-    
-    this.containers.forEach((container) => {
-      console.log("container:", container);
-      this.observer.observe(container);
-      
-      // Add event listeners to each container
-      container.addEventListener("mousemove", this.#e);
-      container.addEventListener("mousedown", this.#t);
-      container.addEventListener("mouseup", this.#n);
-    });
-    
-    return this;
+    ((this.containers = [
+      ...document.getElementsByClassName("webgl-canvas_container"),
+    ]),
+      (this.observer = new IntersectionObserver((e) => {
+        let t = 0;
+        (e.forEach((n) => {
+          n.isIntersecting && (t++, j.instance.setContainer(n.target));
+        }),
+          (this.isVisible = t > 0));
+      })),
+      this.containers.forEach((e) => {
+		console.log("e:", e)
+        this.observer.observe(e);
+      }),
+      j.instance.create(this.containers[0]),
+      document.body.addEventListener("mousemove", this.#e),
+      document.body.addEventListener("mousedown", this.#t),
+      document.body.addEventListener("mouseup", this.#n),
+      requestAnimationFrame(this.#i));
   };
   #e = (e) => {
-    // Get the container that this event is for
-    const container = e.currentTarget;
-    let parentZoom = 1;
-    const rect = container.getBoundingClientRect();
-    const tnatom = container.closest('.tn-atom');
-    if(tnatom){
-      parentZoom = parseFloat(tnatom.parentElement.style.zoom);
-    }
-    let x1 = (e.clientX - rect.left) / parentZoom;
-    let y1 = (e.clientY - rect.top) / parentZoom;
+	let parentZoom = 1;
+	const rect = e.target.getBoundingClientRect();
+	const tnatom = e.target.closest('.tn-atom');
+	if(tnatom){
+		parentZoom = parseFloat(tnatom.parentElement.style.zoom);
+	}
+	let x1 = (e.clientX - rect.left) / parentZoom;
+	let y1 = (e.clientY - rect.top) / parentZoom;
 
     Se.dispatch("pointer.raw", { x: x1, y: y1 });
   };
@@ -24638,13 +24605,13 @@ class nm {
   #n = () => {
     Se.dispatch("pointer.raw.up");
   };
+  #i = (e) => {
+    (requestAnimationFrame(this.#i),
+      this.isVisible
+        ? (document.hasFocus() || Se.dispatch("Performance.flushEvent"),
+          Se.dispatch("frame.raw", e))
+        : Se.dispatch("Performance.flushEvent"));
+  };
 }
-
-// Function to initialize water ripple effect on containers
-function initWaterRipple(containerSelector = ".webgl-canvas_container") {
-  const instance = new nm(containerSelector, true);
-  return instance;
-}
-
-// Initialize default water ripple for backward compatibility
-const im = initWaterRipple();
+const im = new nm();
+im.start();
