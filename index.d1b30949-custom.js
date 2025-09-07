@@ -24577,11 +24577,14 @@ class nm {
           });
           if (best && best !== j.container) j.instance.setContainer(best);
         }
-        this.isVisible = this.visibleMap.size > 0;
+        // Always keep animation running
+        this.isVisible = true;
       }, { threshold: [0, 0.01, 0.1, 0.25, 0.5, 0.75, 1] })),
       this.containers.forEach((e) => {
         this.observer.observe(e);
       }),
+      // Always consider animation should run
+      this.isVisible = true,
       j.instance.create(this.containers[0]),
       document.body.addEventListener("mousemove", this.#e),
       document.body.addEventListener("mousedown", this.#t),
@@ -24610,7 +24613,6 @@ class nm {
   };
   #i = (e) => {
     (requestAnimationFrame(this.#i),
-      (this.isVisible && document.hasFocus()) || Se.dispatch("Performance.flushEvent"),
       Se.dispatch("frame.raw", e));
   };
 }
