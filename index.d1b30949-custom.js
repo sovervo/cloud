@@ -24556,7 +24556,6 @@ class j {
 }
 class nm {
   isVisible = !1;
-  mirrors = [];
   constructor() {
     new j();
   }
@@ -24570,17 +24569,36 @@ class nm {
       document.body.addEventListener("mouseup", this.#n),
       requestAnimationFrame(this.#i));
 
-    // create mirror canvases for all additional containers
+    // create independent instances in iframes for additional containers
+    const rainSrc = (() => {
+      const ss = document.getElementsByTagName("script");
+      for (let i = 0; i < ss.length; i++) {
+        const s = ss[i];
+        if (s.src && s.src.indexOf("rain.js") !== -1) return s.src;
+      }
+      return "./rain.js";
+    })();
     for (let i = 1; i < this.containers.length; i++) {
       const el = this.containers[i];
-      const canvas = document.createElement("canvas");
-      canvas.style.width = "100%";
-      canvas.style.height = "100%";
-      canvas.style.display = "block";
-      el.appendChild(canvas);
-      const ctx = canvas.getContext("2d");
-      ctx.imageSmoothingEnabled = !1;
-      this.mirrors.push({ container: el, canvas, ctx });
+      const img = el.querySelector("img");
+      const grad = img ? img.src : "";
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("frameborder", "0");
+      iframe.setAttribute("scrolling", "no");
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.display = "block";
+      iframe.style.border = "0";
+      iframe.srcdoc = `<!doctype html><html><head><meta charset=\"utf-8\"><style>
+        html, body { margin:0; padding:0; height:100%; }
+        .webgl-canvas_container{ z-index:1; pointer-events:none; width:100%; height:100%; position:absolute; inset:0% 0% auto; }
+        .webgl-canvas_container img{ display:none; }
+      </style></head><body>
+        <div class=\"webgl-canvas_container\"><img src=\"${grad}\" alt=\"\"></div>
+        <script>(function(){ var s=document.createElement('script'); s.src='${rainSrc}'; document.head.appendChild(s); })();<\/script>
+      </body></html>`;
+      el.innerHTML = "";
+      el.appendChild(iframe);
     }
   };
   #e = (e) => {
@@ -24606,25 +24624,6 @@ class nm {
   #i = (e) => {
     (requestAnimationFrame(this.#i),
       Se.dispatch("frame.raw", e));
-
-    // copy the main renderer's canvas into all mirror canvases
-    if (this.mirrors.length) {
-      const src = j.pipeline && j.pipeline.renderer && j.pipeline.renderer.domElement;
-      if (src) {
-        const dpr = window.devicePixelRatio || 1;
-        for (let m of this.mirrors) {
-          const r = m.container.getBoundingClientRect();
-          const w = Math.max(1, Math.round(r.width * dpr));
-          const h = Math.max(1, Math.round(r.height * dpr));
-          if (m.canvas.width !== w || m.canvas.height !== h) {
-            m.canvas.width = w;
-            m.canvas.height = h;
-          }
-          m.ctx.clearRect(0, 0, m.canvas.width, m.canvas.height);
-          m.ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, m.canvas.width, m.canvas.height);
-        }
-      }
-    }
   };
 }
 const im = new nm();
