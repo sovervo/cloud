@@ -24075,7 +24075,6 @@ class Ar {
         this.collection.push({ mesh: a, container: t, img: s });
         this.scene.add(a);
       }
-      (t.style.opacity = 0), (t.style.pointerEvents = "none");
     }
   };
   updateNDC11 = () => {
