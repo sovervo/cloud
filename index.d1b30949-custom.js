@@ -23545,7 +23545,7 @@ class Hp {
       Se.on("pointer.ndc", this.onPointer));
   }
   onPointer = ({ x: e, y: t }) => {
-    Sn.set("cam.position", [-e, -t]);
+    // Sn.set("cam.position", [-e, -t]);
   };
   onFrame = () => {
     const e = Sn.get("cam.position");
@@ -24575,16 +24575,14 @@ class nm {
       requestAnimationFrame(this.#i));
   };
   #e = (e) => {
+	let parentZoom = 1;
 	const rect = e.target.getBoundingClientRect();
 	const tnatom = e.target.closest('.tn-atom');
-	const parentZoom = parseFloat(tnatom.parentElement.style.zoom);
-	console.log("parentZoom:", parentZoom)
+	if(tnatom){
+		parentZoom = parseFloat(tnatom.parentElement.style.zoom);
+	}
 	let x1 = (e.clientX - rect.left) / parentZoom;
 	let y1 = (e.clientY - rect.top) / parentZoom;
-
-	console.log("x1:", x1, "y1:", y1, "e.clientX:", e.clientX, "e.clientY:", e.clientY)
-
-    // const t = this.isVisible ? e.pageY - j.layoutController.top : e.clientY;
 
     Se.dispatch("pointer.raw", { x: x1, y: y1 });
   };
