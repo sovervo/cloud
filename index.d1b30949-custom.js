@@ -22030,6 +22030,7 @@ class Pp extends Kt {
       f;
     const p = 5,
       m = (T) => {
+		console.log("T0:", T)
         ((o = T.clientX),
           (l = c = T.clientY),
           (a = !0),
