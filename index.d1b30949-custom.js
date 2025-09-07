@@ -23873,18 +23873,25 @@ void main() {
 }
 class Yp {
   out = {
-    uniforms: { seconds: at(xt.secondsProvider) },
+    uniforms: {
+      seconds: at(xt.secondsProvider),
+      noiseWhenNoDrops: at("PostFX.noiseWhenNoDrops", !0),
+      dropsEnabled: at("SimpleFluidSim.dropsEnabled", !0),
+    },
     declarations: `
 uniform float seconds;
+uniform bool noiseWhenNoDrops;
+uniform bool dropsEnabled;
 float rand(vec2 c) {
   return fract(sin(dot(fract(c), vec2(12.9898, 78.233))) * 43758.5453);
 }
 
 `,
     inject: `{
-      float rnd = rand(vUv + fract(seconds));
-      color += rnd * 0.15 - 0.075;
-      // color.b = 1.;
+      if (dropsEnabled || noiseWhenNoDrops) {
+        float rnd = rand(vUv + fract(seconds));
+        color += rnd * 0.15 - 0.075;
+      }
     }`,
   };
 }
@@ -24559,6 +24566,15 @@ class j {
       dropsEnabled = !(v === "0" || v === "false" || v === "off" || v === "no" || v === "none");
     }
     ot("SimpleFluidSim.dropsEnabled", dropsEnabled);
+
+    // Read data-rain-noise attribute to control noise when drops are disabled
+    const noiseAttr = e.getAttribute("data-rain-noise");
+    let noiseWhenNoDrops = !0;
+    if (noiseAttr !== null) {
+      const v = String(noiseAttr).trim().toLowerCase();
+      noiseWhenNoDrops = !(v === "0" || v === "false" || v === "off" || v === "no" || v === "none");
+    }
+    ot("PostFX.noiseWhenNoDrops", noiseWhenNoDrops);
   };
 }
 class nm {
