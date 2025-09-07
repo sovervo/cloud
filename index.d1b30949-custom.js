@@ -24035,7 +24035,22 @@ class Ar {
       this.camera.updateProjectionMatrix(),
       this.updateNDC11(),
       (this.collection = []));
-    // Defer collecting elements; will populate in setContainer
+    const e = document.getElementsByClassName("webgl-elements_container");
+    for (let t of e) {
+      const n = t.getElementsByTagName("img");
+      if (n.length === 0) {
+        console.warn("Empty container?", t);
+        continue;
+      }
+      for (let r = 0; r < n.length; r++) {
+        const s = n[r],
+          a = new Lt(new Zt(), new ca({ transparent: !0 }));
+        (this.updateMesh(a, s),
+          this.collection.push({ mesh: a, container: t, img: s }),
+          this.scene.add(a));
+      }
+      ((t.style.opacity = 0), (t.style.pointerEvents = "none"));
+    }
     ((this.rt = new qt(j.viewport.x, j.viewport.y, {
       wrapS: Wt,
       wrapT: Wt,
@@ -24051,33 +24066,12 @@ class Ar {
       document.addEventListener("scroll", this.onScroll));
   }
   setContainer = (e) => {
-    (this.container = e,
-      this.scope = e && e.closest ? e.closest('.preloader') || e : e,
+    ((this.container = e),
       this.onScroll(),
-      this.updateNDC11());
-
-    // remove previous meshes
-    this.collection.forEach(({ mesh: t }) => {
-      this.scene.remove(t);
-      if (t.geometry && t.geometry.dispose) t.geometry.dispose();
-      if (t.material && t.material.map && t.material.map.dispose)
-        t.material.map.dispose();
-    });
-    this.collection.length = 0;
-
-    // add images within the nearest preloader scope (or container if none)
-    const root = this.scope || e;
-    const els = root.getElementsByClassName("webgl-elements_container");
-    for (let t of els) {
-      const n = t.getElementsByTagName("img");
-      for (let r = 0; r < n.length; r++) {
-        const s = n[r],
-          a = new Lt(new Zt(), new ca({ transparent: !0 }));
-        this.updateMesh(a, s);
-        this.collection.push({ mesh: a, container: t, img: s });
-        this.scene.add(a);
-      }
-    }
+      this.updateNDC11(),
+      this.collection.forEach(({ mesh: t, img: n }) => {
+        this.updateMesh(t, n, !1);
+      }));
   };
   updateNDC11 = () => {
     (this.ndc11
@@ -24156,8 +24150,9 @@ class Ar {
       this.rt.setSize(e, t));
   };
   onScroll = () => {
-    const el = this.scope || this.container;
-    this.top = el ? el.getBoundingClientRect().top + window.scrollY : 0;
+    this.top = this.container
+      ? this.container.getBoundingClientRect().top + window.scrollY
+      : 0;
   };
 }
 var Zp = `#define pi 3.141592653589793
@@ -24563,55 +24558,31 @@ class nm {
     ((this.containers = [
       ...document.getElementsByClassName("webgl-canvas_container"),
     ]),
+      (this.observer = new IntersectionObserver((e) => {
+        let t = 0;
+        (e.forEach((n) => {
+          n.isIntersecting && (t++, j.instance.setContainer(n.target));
+        }),
+          (this.isVisible = t > 0));
+      })),
+      this.containers.forEach((e) => {
+        this.observer.observe(e);
+      }),
       j.instance.create(this.containers[0]),
       document.body.addEventListener("mousemove", this.#e),
       document.body.addEventListener("mousedown", this.#t),
       document.body.addEventListener("mouseup", this.#n),
       requestAnimationFrame(this.#i));
-
-    // create independent instances in iframes for additional containers
-    const rainSrc = (() => {
-      const ss = document.getElementsByTagName("script");
-      for (let i = 0; i < ss.length; i++) {
-        const s = ss[i];
-        if (s.src && s.src.indexOf("rain.js") !== -1) return s.src;
-      }
-      return "./rain.js";
-    })();
-    for (let i = 1; i < this.containers.length; i++) {
-      const el = this.containers[i];
-      const img = el.querySelector("img");
-      const grad = img ? img.src : "";
-      const iframe = document.createElement("iframe");
-      iframe.setAttribute("frameborder", "0");
-      iframe.setAttribute("scrolling", "no");
-      iframe.style.width = "100%";
-      iframe.style.height = "100%";
-      iframe.style.display = "block";
-      iframe.style.border = "0";
-      iframe.srcdoc = `<!doctype html><html><head><meta charset=\"utf-8\"><style>
-        html, body { margin:0; padding:0; height:100%; }
-        .webgl-canvas_container{ z-index:1; pointer-events:none; width:100%; height:100%; position:absolute; inset:0% 0% auto; }
-        .webgl-canvas_container img{ display:none; }
-      </style></head><body>
-        <div class=\"webgl-canvas_container\"><img src=\"${grad}\" alt=\"\"></div>
-        <script>(function(){ var s=document.createElement('script'); s.src='${rainSrc}'; document.head.appendChild(s); })();<\/script>
-      </body></html>`;
-      el.innerHTML = "";
-      el.appendChild(iframe);
-    }
   };
   #e = (e) => {
-    let parentZoom = 1;
-    const container = j.container || (this.containers && this.containers[0]);
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const tnatom = container.closest('.tn-atom');
-    if (tnatom && tnatom.parentElement && tnatom.parentElement.style && tnatom.parentElement.style.zoom) {
-      parentZoom = parseFloat(tnatom.parentElement.style.zoom);
-    }
-    let x1 = (e.clientX - rect.left) / parentZoom;
-    let y1 = (e.clientY - rect.top) / parentZoom;
+	let parentZoom = 1;
+	const rect = e.target.getBoundingClientRect();
+	const tnatom = e.target.closest('.tn-atom');
+	if(tnatom){
+		parentZoom = parseFloat(tnatom.parentElement.style.zoom);
+	}
+	let x1 = (e.clientX - rect.left) / parentZoom;
+	let y1 = (e.clientY - rect.top) / parentZoom;
 
     Se.dispatch("pointer.raw", { x: x1, y: y1 });
   };
@@ -24623,7 +24594,10 @@ class nm {
   };
   #i = (e) => {
     (requestAnimationFrame(this.#i),
-      Se.dispatch("frame.raw", e));
+      this.isVisible
+        ? (document.hasFocus() || Se.dispatch("Performance.flushEvent"),
+          Se.dispatch("frame.raw", e))
+        : Se.dispatch("Performance.flushEvent"));
   };
 }
 const im = new nm();
