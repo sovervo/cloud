@@ -24562,14 +24562,22 @@ class nm {
     ((this.containers = [
       ...document.getElementsByClassName("webgl-canvas_container"),
     ]),
+      (this.visibleMap = new Map()),
       (this.observer = new IntersectionObserver((e) => {
-        let visible = e.filter((n) => n.isIntersecting);
-        if (visible.length > 0) {
-          visible.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-          j.instance.setContainer(visible[0].target);
+        e.forEach((n) => {
+          if (n.isIntersecting) this.visibleMap.set(n.target, n.intersectionRatio);
+          else this.visibleMap.delete(n.target);
+        });
+        if (this.visibleMap.size > 0) {
+          let best = null;
+          let bestRatio = -1;
+          this.visibleMap.forEach((r, el) => {
+            if (r > bestRatio) { bestRatio = r; best = el; }
+          });
+          if (best && best !== j.container) j.instance.setContainer(best);
         }
-        this.isVisible = visible.length > 0;
-      })),
+        this.isVisible = this.visibleMap.size > 0;
+      }, { threshold: [0, 0.01, 0.1, 0.25, 0.5, 0.75, 1] })),
       this.containers.forEach((e) => {
         this.observer.observe(e);
       }),
