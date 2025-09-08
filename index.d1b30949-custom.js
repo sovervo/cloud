@@ -24578,7 +24578,7 @@ class j {
   };
 }
 class nm {
-  isVisible = !1;
+  isVisible = !0;
   constructor() {
     new j();
   }
@@ -24622,10 +24622,8 @@ class nm {
   };
   #i = (e) => {
     (requestAnimationFrame(this.#i),
-      this.isVisible
-        ? (document.hasFocus() || Se.dispatch("Performance.flushEvent"),
-          Se.dispatch("frame.raw", e))
-        : Se.dispatch("Performance.flushEvent"));
+      (document.hasFocus() || Se.dispatch("Performance.flushEvent")),
+      Se.dispatch("frame.raw", e));
   };
 }
 const im = new nm();
