@@ -24099,20 +24099,7 @@ class Ar {
     return ((r.x *= e), (r.y *= t), r);
   };
   imgToTexture = (e, t) => {
-    if (((e.crossOrigin = "anonymous"), !e.src.endsWith(".svg"))) {
-      const a = new jo();
-      return (
-        a.setCrossOrigin("anonymous"),
-        a.load(e.src, (o) => {
-          o.colorSpace = Pt;
-        })
-      );
-    }
-    const n = document.createElement("canvas");
-    ((n.width = t.width), (n.height = t.height));
-    const r = new pp(n);
-    r.colorSpace = Pt;
-    const s = n.getContext("2d");
+    e.crossOrigin = "anonymous";
     
     // Helper function to draw image with cover effect (like CSS background-size: cover)
     const drawImageCover = (ctx, img, canvasWidth, canvasHeight) => {
@@ -24135,6 +24122,14 @@ class Ar {
       
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     };
+    
+    // Create canvas for all images to apply cover effect
+    const n = document.createElement("canvas");
+    n.width = t.width;
+    n.height = t.height;
+    const r = new pp(n);
+    r.colorSpace = Pt;
+    const s = n.getContext("2d");
     
     return (
       e.complete
