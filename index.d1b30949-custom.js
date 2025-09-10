@@ -24113,11 +24113,34 @@ class Ar {
     const r = new pp(n);
     r.colorSpace = Pt;
     const s = n.getContext("2d");
+    
+    // Helper function to draw image with cover effect (like CSS background-size: cover)
+    const drawImageCover = (ctx, img, canvasWidth, canvasHeight) => {
+      const imgAspect = img.naturalWidth / img.naturalHeight;
+      const canvasAspect = canvasWidth / canvasHeight;
+      
+      let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+      
+      if (imgAspect > canvasAspect) {
+        // Image is wider than canvas - scale to fit height and crop width
+        drawHeight = canvasHeight;
+        drawWidth = drawHeight * imgAspect;
+        offsetX = (canvasWidth - drawWidth) / 2;
+      } else {
+        // Image is taller than canvas - scale to fit width and crop height  
+        drawWidth = canvasWidth;
+        drawHeight = drawWidth / imgAspect;
+        offsetY = (canvasHeight - drawHeight) / 2;
+      }
+      
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    };
+    
     return (
       e.complete
-        ? (s.drawImage(e, 0, 0, t.width, t.height), (r.needsUpdate = !0))
+        ? (drawImageCover(s, e, t.width, t.height), (r.needsUpdate = !0))
         : (e.onload = () => {
-            (s.drawImage(e, 0, 0, t.width, t.height), (r.needsUpdate = !0));
+            (drawImageCover(s, e, t.width, t.height), (r.needsUpdate = !0));
           }),
       r
     );
@@ -24157,15 +24180,6 @@ class Ar {
         ((r.material.map = null), a.dispose(), this.updateMesh(r, s));
       }),
       this.rt.setSize(e, t));
-    // update cover scale on resize using current gradientMap if available
-    const grad = at("gradientMap", null).value;
-    if (grad && grad.image && grad.image.width && grad.image.height) {
-      const containerAspect = j.viewport.x / j.viewport.y;
-      const imageAspect = grad.image.width / grad.image.height;
-      let scaleX = 1, scaleY = 1;
-      if (imageAspect > containerAspect) scaleX = imageAspect / containerAspect; else if (imageAspect < containerAspect) scaleY = containerAspect / imageAspect;
-      ot("coverScale", new Ue(scaleX, scaleY));
-    }
   };
   onScroll = () => {
     this.top = this.container
@@ -24187,7 +24201,6 @@ uniform float displacementPower;\r
 uniform float lightAmplification;\r
 uniform float causticsPower;\r
 uniform vec2 aspect;\r
-uniform vec2 coverScale;\r
 uniform vec3 bgColor;\r
 uniform mat4 invProjectionMatrix;\r
 uniform mat4 invViewMatrix;
@@ -24257,9 +24270,8 @@ void main() {\r
 
   color += light * lightAmplification * mix(1., reflectivity, reflectivityInfluence);
 
-  vec2 bgUV = (uv - 0.5) * coverScale + 0.5;\r
-  vec3 bg = texture2D(gradMap, bgUV).rgb;\r
-  color = mix(bg, color, layoutTexel.a);
+  vec3 gradient = texture2D(gradMap, vec2(dot(color, vec3(0.33333)), 0.5)).rgb;\r
+  color = mix(gradient, color, layoutTexel.a);
 
   gl_FragColor = vec4(color, 1.);\r
   
@@ -24282,7 +24294,6 @@ class Jp extends Ot {
       uniforms: {
         aspect: { value: j.viewport.aspectV2 },
         gradMap: at("gradientMap", null),
-        coverScale: at("coverScale", new Ue(1, 1)),
         caustcisMap: at(li.mapProvider, null),
         simMap: at(Ii.provider),
         bgColor: { value: new qe(16609316) },
@@ -24558,19 +24569,6 @@ class j {
         const l = s[0].src;
         r = o.load(l, (c) => {
           c.colorSpace = Pt;
-          // compute cover scale when image information is available
-          const containerAspect = j.viewport.x / j.viewport.y;
-          const imageAspect = c.image ? c.image.width / c.image.height : 1;
-          // background-size: cover scaling: scale by max(containerAspect/imageAspect, imageAspect/containerAspect) on respective axis
-          let scaleX = 1, scaleY = 1;
-          if (imageAspect > containerAspect) {
-            // image wider than container: scale Y to 1, expand X
-            scaleX = imageAspect / containerAspect;
-          } else if (imageAspect < containerAspect) {
-            // image taller: scale X to 1, expand Y
-            scaleY = containerAspect / imageAspect;
-          }
-          ot("coverScale", new Ue(scaleX, scaleY));
         });
       }
       const a = { container: e, gradMap: r };
