@@ -24627,4 +24627,6 @@ class nm {
   };
 }
 const im = new nm();
-im.start();
+setTimeout(() => {
+  im.start();
+}, 200);
